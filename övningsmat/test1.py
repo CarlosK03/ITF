@@ -30,4 +30,9 @@ sqliteCursor.execute(sqliteQ)
 
 sqliteResult = sqliteCursor.fetchall()
 print(sqliteResult)
+
+sqliteBLOB1 = sqliteResult[0][0]
+
+print(sqliteBLOB1)
+
         
