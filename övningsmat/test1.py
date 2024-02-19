@@ -25,4 +25,6 @@ sqliteConnection=sqlite3.connect(sqliteDatabase)
 sqliteCursor = sqliteConnection.cursor()
 
 sqliteQ = "SELECT ZDATA FROM ZICNOTEDATA;"
+
+sqliteCursor.execute(sqliteQ)
         
