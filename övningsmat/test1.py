@@ -35,4 +35,11 @@ sqliteBLOB1 = sqliteResult[0][0]
 
 print(sqliteBLOB1)
 
+decompressedBLOB = gzip.decompress(sqliteBLOB1)
+
+print(decompressedBLOB)
+
+decodedDecompressedProtobufBLOB = blackboxprotobuf.decode_message(decompressedBLOB)
+print(decodedDecompressedProtobufBLOB)
+
         
