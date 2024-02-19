@@ -23,4 +23,6 @@ sqliteDatabase = os.path.join(tempFolder, "NoteStore.sqlite")
 sqliteConnection=sqlite3.connect(sqliteDatabase)
 
 sqliteCursor = sqliteConnection.cursor()
+
+sqliteQ = "SELECT ZDATA FROM ZICNOTEDATA;"
         
