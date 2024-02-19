@@ -1,0 +1,22 @@
+import biplist
+
+path = "City Run.plist"
+
+plist = biplist.readPlist(path)
+
+print(plist.keys())
+
+print(type(plist["Locations"]))
+
+print(len(plist["Locations"]))
+
+locationList = plist["Locations"]
+
+print(type(locationList[0]))
+
+print(locationList[0][0:10])
+
+plist0Inside = biplist.readPlistFromString(locationList[0])
+
+print (plist0Inside)
+
