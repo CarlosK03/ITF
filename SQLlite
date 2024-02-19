@@ -1,0 +1,18 @@
+import sqlite3
+
+sqliteDatabase = "places.sqlite"
+
+sqliteQHistory = ""
+
+sqliteConnection = sqlite3.connect(sqliteDatabase)
+
+sqliteCursor = sqliteConnection.cursor()
+
+sqliteCursor.execute(sqliteQHistory)
+
+sqliteResult = sqliteCursor.fetchall()
+
+for row  in sqliteResult:
+    print(row)
+
+sqliteConnection.close()
