@@ -5,7 +5,7 @@ import gzip
 import blackboxprotobuf  # Assuming blackboxprotobuf has been successfully installed
 
 
-filePath = "C:/Users/TheKi/Downloads/Telefon2-GalaxyS21/CellebriteCTF23SharonGalaxyS21.zip"
+filePath = "/Users/TheKi/Downloads/Telefon2-GalaxyS21/CellebriteCTF23SharonGalaxyS21.zip"
 tempFolder = "./temp"
 
 openZIP = zipfile.ZipFile(filePath, mode="r")
@@ -40,6 +40,6 @@ decompressedBLOB = gzip.decompress(sqliteBLOB1)
 print(decompressedBLOB)
 
 decodedDecompressedProtobufBLOB = blackboxprotobuf.decode_message(decompressedBLOB)
-print(decodedDecompressedProtobufBLOB)
+print(decodedDecompressedProtobufBLOB[0]["2"]["3"]["2"].decode("utf-8"))
 
         
