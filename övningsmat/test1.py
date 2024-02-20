@@ -5,18 +5,22 @@ import gzip
 import blackboxprotobuf  
 
 
-filePath = "K:/Downloads/Telefon2-GalaxyS21/CellebriteCTF23SharonGalaxyS21.zip"
+filePath = r"K:/TheProjectAIF/ITF/S21.zip"
 tempFolder = "./temp"
 
-openZIP = zipfile.ZipFile(filePath, mode="r")
+#openZIP = zipfile.ZipFile(filePath, mode="r")
+openedZipfile = zipfile.ZipFile(filePath, mode="r")
 
-for filename in openZIP.namelist():
-    if "NoteStore.sqlite" in filename:
-        print("NotesStore found: ", filename)
-        localFileName = filename.rsplit("/", 1)[-1]
-        print("Saving file: ", localFileName)
-        with open(os.path.join(tempFolder, localFileName), 'wb') as localFile:
-            localFile.write(openZIP.read(filename))
+for filename in openedZipfile.namelist():
+    print("File: ", filename)
+
+#for filename in openZIP.namelist():
+#    if "NoteStore.sqlite" in filename:
+#        print("NotesStore found: ", filename)
+#        localFileName = filename.rsplit("/", 1)[-1]
+#        print("Saving file: ", localFileName)
+#        with open(os.path.join(tempFolder, localFileName), 'wb') as localFile:
+#            localFile.write(openZIP.read(filename))
             
 #sqliteDatabase = os.path.join(tempFolder, "NoteStore.sqlite")
 
