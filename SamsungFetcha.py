@@ -1,11 +1,18 @@
-import zipfile, sqlite3, csv, io, os
+'''
+Senast gjort:
+
+
+'''
+import zipfile, sqlite3, csv, io, os, gzip, blackboxprotobuf
 
 # Definiera sökvägarna för zip-filen och databasmappen
 filePath = r"K:/TheProjectAIF/ITF/S21.zip"
 dbFolder = r"K:/TheProjectAIF/ITF/dbFolder"
 dbName = "extracted_data.db"
 
-# Se till att dbFolder finns
+openedZipFile = zipfile.ZipFile(filePath, mode="r")
+
+# Se till att dbFolder finns och om den ej finns skapar den
 if not os.path.exists(dbFolder):
     os.makedirs(dbFolder)
 
@@ -16,7 +23,7 @@ dbPath = os.path.join(dbFolder, dbName)
 conn = sqlite3.connect(dbPath)
 cursor = conn.cursor()
 
-# Skapa en tabell (denna struktur kan behöva justeras baserat på dina CSV-filer)
+# Skapa en tabell
 cursor.execute('''CREATE TABLE IF NOT EXISTS my_table (
                     id INTEGER PRIMARY KEY,
                     column1 TEXT,
@@ -24,7 +31,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS my_table (
                   )''')
 
 # Öppna zip-filen
-with zipfile.ZipFile(filePath, 'r') as z:
+with opendZipFile as z:
     for filename in z.namelist():
         if filename.endswith('.csv'):  # Bearbeta CSV-filer
             with z.open(filename) as f:
@@ -40,4 +47,4 @@ with zipfile.ZipFile(filePath, 'r') as z:
 conn.commit()
 conn.close()
 
-print("Data importerades framgångsrikt.")
+print("Data importerades dags att dissikera :)")
