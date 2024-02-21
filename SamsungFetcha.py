@@ -1,8 +1,3 @@
-'''
-Senast gjort:
-
-
-'''
 import zipfile, sqlite3, csv, io, os, gzip, blackboxprotobuf, chardet
 
 # Definiera sökvägarna för zip-filen och databasmappen
@@ -14,10 +9,6 @@ dbPath = os.path.join(dbFolder, dbName)
 #Definerar en variabel som innehåller de filtyper vi är intresserade av
 relevant_extensions = (
     '.log', '.txt', '.csv',  # Loggfiler och textfiler
-    # '.db', '.sqlite',  # Databaser för webbhistorik, cookies, etc.
-    # '.pdf', '.txt',  # Dokumentfiler
-    # '.jpg', '.jpeg', '.png', '.gif', '.bmp',  # Bildfiler
-    # '.pb'  # Och andra specifika filtyper du är intresserad av
 )
 #Variabel som defineras med att den öppnar S21.zip för läsning
 openedZipFile = zipfile.ZipFile(filePath, mode="r")
