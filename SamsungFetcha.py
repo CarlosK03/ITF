@@ -25,19 +25,23 @@ cursor = conn.cursor()
 # Skapa en tabell
 cursor.execute('''CREATE TABLE IF NOT EXISTS file_contents (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    filename TEXT,
-                    content TEXT
+                    filelocation TEXT,
+                    content TEXT,
+                    size INTEGER
                   )''')
+
 
 
 # Öppna zip-filen och bearbeta filerna
 def decode_and_insert_file_contents(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as z:
-        for filename in tqdm(z.namelist()):
-            if filename.endswith(('.csv', '.log', '.txt')):
-                with z.open(filename, 'r') as file:
+        for filelocation in tqdm(z.namelist()):
+            if filelocation.endswith(('.csv', '.log', '.txt')):
+                with z.open(filelocation, 'r') as file:
                     # Läs bara de första 4096 bytes för att gissa kodningen i syfte till att effektivisera processen då de är stora mängder data som granskas annars
                     content_sample = file.read(4096)
+                    if not content_sample: # Skippar filer utan innehåll
+                        continue
                     result = chardet.detect(content_sample)
                     encoding = result['encoding']
 
@@ -47,24 +51,26 @@ def decode_and_insert_file_contents(zip_path):
 
                     # Dekoda innehållet med den upptäckta kodningen eller använd UTF-8 som fallback
                     try:
-                        # Decode the content with the detected encoding or use UTF-8 as a fallback
                         content_str = content_full.decode(encoding) if encoding else content_full.decode('utf-8')
-                        #print(f"File: {filename}, Encoding: {encoding}\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
+                        size = len(content_full)
+                        cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size)) # Insert the decoded content into the database
+                        #print(f"File: {filelocation}, Encoding: {encoding}\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
                         
-                        # Insert the decoded content into the database
-                        cursor.execute("INSERT INTO file_contents (filename, content) VALUES (?, ?)", (filename, content_str))
+
                         
                     except UnicodeDecodeError:
-                        #print(f"Could not decode {filename} with encoding {encoding}. Trying 'utf-8-sig' or 'ISO-8859-1'.") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
+                        #print(f"Could not decode {filelocation} with encoding {encoding}. Trying 'utf-8-sig' or 'ISO-8859-1'.") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
                         
                         try:
                             content_str = content_full.decode('utf-8-sig')
+                            size = len(content_full)
+                            cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size))
                         except UnicodeDecodeError:
                             content_str = content_full.decode('ISO-8859-1')
-                        #print(f"File: {filename}, Encoding: 'utf-8-sig' or 'ISO-8859-1' used as fallback.\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
+                            size = len(content_full)
+                            cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size))
+                        #print(f"File: {filelocation}, Encoding: 'utf-8-sig' or 'ISO-8859-1' used as fallback.\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
                         
-                        # Insert the decoded content into the database even if fallback encodings are used
-                        cursor.execute("INSERT INTO file_contents (filename, content) VALUES (?, ?)", (filename, content_str))
 
 
 

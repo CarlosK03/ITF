@@ -7,10 +7,10 @@ relevant_extensions = (
 )
 
 
-        #    print("File: ", filename)
-        # if filename.endswith('.csv'):  # Bearbeta CSV-filer
-        #     with z.open(filename) as f:
-        #         print(f"Bearbetar fil: {filename}")
+        #    print("File: ", filelocation)
+        # if filelocation.endswith('.csv'):  # Bearbeta CSV-filer
+        #     with z.open(filelocation) as f:
+        #         print(f"Bearbetar fil: {filelocation}")
         #         # Slå in filpekaren i en TextIOWrapper för att läsa text
         #         text_stream = io.TextIOWrapper(f, encoding='utf-8')
         #         reader = csv.reader(text_stream)

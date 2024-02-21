@@ -6,12 +6,12 @@ extractionPath = "OneDrive_4_2-19-2024.zip"
 
 openedZipfile = zipfile.ZipFile(extractionPath, mode="r")
 
-for filename in openedZipfile.namelist():
-    print("File: ", filename)
+for filelocation in openedZipfile.namelist():
+    print("File: ", filelocation)
     
     
-for filename in openedZipfile.namelist():
-    if "bingo" in filename:
-        print("Found:", filename)
+for filelocation in openedZipfile.namelist():
+    if "bingo" in filelocation:
+        print("Found:", filelocation)
         print("File contents:")
-        print(openedZipfile.read(filename).decode("utf-8"))
+        print(openedZipfile.read(filelocation).decode("utf-8"))

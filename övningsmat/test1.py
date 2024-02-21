@@ -11,16 +11,16 @@ dbFolder = "./temp"
 #openZIP = zipfile.ZipFile(filePath, mode="r")
 openedZipfile = zipfile.ZipFile(filePath, mode="r")
 
-for filename in openedZipfile.namelist():
-    print("File: ", filename)
+for filelocation in openedZipfile.namelist():
+    print("File: ", filelocation)
 
-#for filename in openZIP.namelist():
-#    if "NoteStore.sqlite" in filename:
-#        print("NotesStore found: ", filename)
-#        localFileName = filename.rsplit("/", 1)[-1]
-#        print("Saving file: ", localFileName)
-#        with open(os.path.join(dbFolder, localFileName), 'wb') as localFile:
-#            localFile.write(openZIP.read(filename))
+#for filelocation in openZIP.namelist():
+#    if "NoteStore.sqlite" in filelocation:
+#        print("NotesStore found: ", filelocation)
+#        localfilelocation = filelocation.rsplit("/", 1)[-1]
+#        print("Saving file: ", localfilelocation)
+#        with open(os.path.join(dbFolder, localfilelocation), 'wb') as localFile:
+#            localFile.write(openZIP.read(filelocation))
             
 #sqliteDatabase = os.path.join(dbFolder, "NoteStore.sqlite")
 

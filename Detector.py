@@ -7,17 +7,17 @@
 # def detect_encodings(zip_path):
 #     with zipfile.ZipFile(zip_path, 'r') as z:
 #         encodings = {}  # Använder en dict för att spara kodningar och motsvarande filer
-#         for filename in z.namelist():
-#             if filename.endswith(('.csv', '.log', '.txt')):
-#                 with z.open(filename, 'r') as file:
+#         for filelocation in z.namelist():
+#             if filelocation.endswith(('.csv', '.log', '.txt')):
+#                 with z.open(filelocation, 'r') as file:
 #                     content = file.read(4096)  # Läser bara de första 4096 bytes
 #                     result = chardet.detect(content)
 #                     encoding = result['encoding']
 #                     if encoding:
 #                         if encoding not in encodings:
-#                             encodings[encoding] = [filename]
+#                             encodings[encoding] = [filelocation]
 #                         else:
-#                             encodings[encoding].append(filename)
+#                             encodings[encoding].append(filelocation)
 #         # Skriver ut kodningarna och motsvarande filer
 #         for encoding, files in encodings.items():
 #             print(f"Detected encoding: {encoding}")
