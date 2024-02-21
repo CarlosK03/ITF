@@ -1,0 +1,19 @@
+relevant_extensions = (
+    '.log', '.txt', '.csv',  # Loggfiler och textfiler
+    # '.db', '.sqlite',  # Databaser för webbhistorik, cookies, etc.
+    # '.pdf', '.txt',  # Dokumentfiler
+    # '.jpg', '.jpeg', '.png', '.gif', '.bmp',  # Bildfiler
+    # '.pb'  # Och andra specifika filtyper du är intresserad av
+)
+
+
+        #    print("File: ", filename)
+        # if filename.endswith('.csv'):  # Bearbeta CSV-filer
+        #     with z.open(filename) as f:
+        #         print(f"Bearbetar fil: {filename}")
+        #         # Slå in filpekaren i en TextIOWrapper för att läsa text
+        #         text_stream = io.TextIOWrapper(f, encoding='utf-8')
+        #         reader = csv.reader(text_stream)
+        #         for row in reader:
+        #             # Infoga varje rad i databasen
+        #             cursor.execute('INSERT INTO my_table (column1, column2) VALUES (?, ?)', row)

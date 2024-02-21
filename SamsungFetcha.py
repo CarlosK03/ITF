@@ -37,41 +37,33 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS my_table (
                   )''')
 
 
-# Öppna zip-filen
 # Öppna zip-filen och bearbeta filerna
-with openedZipFile as z:
-    for filename in z.namelist():
-        if filename.endswith(relevant_extensions):
-            print(f"Bearbetar fil: {filename}")
-            if filename.endswith('.csv'):
-                with z.open(filename) as f:
-                    # Slå in filpekaren i en TextIOWrapper för att läsa text
-                    text_stream = io.TextIOWrapper(f, encoding='utf-8')
-                    reader = csv.reader(text_stream)
-                    for row in reader:
-                        # Konvertera raden (listan) till en sträng
-                        row_str = ', '.join(row)
-                        # Infoga den konverterade strängen i databasen
-                        cursor.execute('INSERT INTO my_table (data) VALUES (?)', [row_str])
-            elif filename.endswith('.log') or filename.endswith('.txt'):
-                with z.open(filename) as f:
-                    # Läs innehållet i filen
-                    content = f.read()
-                    # Konvertera innehållet till en sträng
-                    content_str = content.decode('utf-8')
-                    # Infoga den konverterade strängen i databasen
-                    cursor.execute('INSERT INTO my_table (data) VALUES (?)', [content_str])
+def decode_and_print_file_contents(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        for filename in z.namelist():
+            if filename.endswith(('.csv', '.log', '.txt')):
+                with z.open(filename, 'r') as file:
+                    # Läs bara de första 4096 bytes för att gissa kodningen
+                    content_sample = file.read(4096)
+                    result = chardet.detect(content_sample)
+                    encoding = result['encoding']
 
-        #    print("File: ", filename)
-        # if filename.endswith('.csv'):  # Bearbeta CSV-filer
-        #     with z.open(filename) as f:
-        #         print(f"Bearbetar fil: {filename}")
-        #         # Slå in filpekaren i en TextIOWrapper för att läsa text
-        #         text_stream = io.TextIOWrapper(f, encoding='utf-8')
-        #         reader = csv.reader(text_stream)
-        #         for row in reader:
-        #             # Infoga varje rad i databasen
-        #             cursor.execute('INSERT INTO my_table (column1, column2) VALUES (?, ?)', row)
+                    # Återställ pekaren till början av filen för att läsa hela filen
+                    file.seek(0)
+                    content_full = file.read()
+
+                    # Dekoda innehållet med den upptäckta kodningen eller använd UTF-8 som fallback
+                    try:
+                        content_str = content_full.decode(encoding) if encoding else content_full.decode('utf-8')
+                        print(f"File: {filename}, Encoding: {encoding}\nContent:\n{content_str}\n")
+                    except UnicodeDecodeError:
+                        print(f"Could not decode {filename} with encoding {encoding}. Trying 'utf-8-sig' or 'ISO-8859-1'.")
+                        try:
+                            content_str = content_full.decode('utf-8-sig')
+                        except UnicodeDecodeError:
+                            content_str = content_full.decode('ISO-8859-1')
+                        print(f"File: {filename}, Encoding: 'utf-8-sig' or 'ISO-8859-1' used as fallback.\nContent:\n{content_str}\n")
+
 
 # Åtaga ändringar och stäng databasanslutningen
 conn.commit()
