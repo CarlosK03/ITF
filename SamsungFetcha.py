@@ -1,5 +1,7 @@
 import zipfile, sqlite3, csv, io, os, gzip, blackboxprotobuf, chardet
 from tqdm import tqdm
+import piexif
+import hashlib
 
 # Definiera sökvägarna för zip-filen och databasmappen
 dbName = "Galaxy_Autopsy_Report.db"
@@ -7,79 +9,74 @@ filePath = r"K:/TheProjectAIF/ITF/S21.zip"
 dbFolder = r"K:/TheProjectAIF/ITF/dbFolder"
 dbPath = os.path.join(dbFolder, dbName)
 
-#Definerar en variabel som innehåller de filtyper vi är intresserade av
-relevant_extensions = (
-    '.log', '.txt', '.csv',  # Loggfiler och textfiler
-)
-#Variabel som defineras med att den öppnar S21.zip för läsning
-openedZipFile = zipfile.ZipFile(filePath, mode="r")
-
-# Se till att dbFolder finns och om den ej finns skapar den
+# Kontrollera om databasmappen finns, skapa annars
 if not os.path.exists(dbFolder):
     os.makedirs(dbFolder)
 
-# Anslut till eller skapa SQLite-databasen
+# Anslut till eller skapa databasen
 conn = sqlite3.connect(dbPath)
 cursor = conn.cursor()
 
-# Skapa en tabell
-cursor.execute('''CREATE TABLE IF NOT EXISTS file_contents (
+# Skapa tabellen för att lagra filinformation
+cursor.execute('''CREATE TABLE IF NOT EXISTS image_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     filelocation TEXT,
-                    content TEXT,
-                    size INTEGER
+                    hash TEXT,
+                    exif_data TEXT
                   )''')
 
+# duplicates_count = 0
+# no_exif_count = 0
+# juicy_count = 0
 
-
-# Öppna zip-filen och bearbeta filerna
-def decode_and_insert_file_contents(zip_path):
+# Funktion för att extrahera och lagra bildinformation
+def extract_image_info(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as z:
-        for filelocation in tqdm(z.namelist()):
-            if filelocation.endswith(('.csv', '.log', '.txt')):
-                with z.open(filelocation, 'r') as file:
-                    # Läs bara de första 4096 bytes för att gissa kodningen i syfte till att effektivisera processen då de är stora mängder data som granskas annars
-                    content_sample = file.read(4096)
-                    if not content_sample: # Skippar filer utan innehåll
-                        continue
-                    result = chardet.detect(content_sample)
-                    encoding = result['encoding']
+        for filelocation in tqdm(z.namelist(), desc="Bearbetar bilder"):
+            if filelocation.lower().endswith(('.jpg', '.jpeg', '.tiff')):
+                filepath = z.extract(filelocation, path="temp_images")
+                exif_data = get_exif_data(filepath)
+                file_hash = get_file_hash(filepath)
+                # Check if the hash already exists in the database
+                cursor.execute("SELECT id FROM image_data WHERE hash = ?", (file_hash,))
+                if cursor.fetchone():
+                    # Hash exists, skip this file
+                    os.remove(filepath)
+                    continue  # Move to the next file
+                # Hash does not exist, proceed with inserting new data
+                os.remove(filepath)  # Radera den extraherade filen
+                exif_data_str = str(exif_data) if exif_data else "NO EXIF"
+                cursor.execute("INSERT INTO image_data (filelocation, hash, exif_data) VALUES (?, ?, ?)",
+                               (filelocation, file_hash, exif_data_str))
 
-                    # Återställ pekaren till början av filen för att läsa hela filen
-                    file.seek(0)
-                    content_full = file.read()
+                
+# Funktion för att hämta EXIF-data från en bildfil
+def get_exif_data(filepath):
+    try:
+        exif_dict = piexif.load(filepath)
+        # Check if EXIF data is effectively empty
+        if exif_dict and all(not v for v in exif_dict.values()):
+            return None  # Treat as no EXIF data
+        return exif_dict if exif_dict else None
+    except Exception as e:
+        return None
 
-                    # Dekoda innehållet med den upptäckta kodningen eller använd UTF-8 som fallback
-                    try:
-                        content_str = content_full.decode(encoding) if encoding else content_full.decode('utf-8')
-                        size = len(content_full)
-                        cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size)) # Insert the decoded content into the database
-                        #print(f"File: {filelocation}, Encoding: {encoding}\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
-                        
+# Funktion för att beräkna hash för en fil
+def get_file_hash(filepath):
+    sha256_hash = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
 
-                        
-                    except UnicodeDecodeError:
-                        #print(f"Could not decode {filelocation} with encoding {encoding}. Trying 'utf-8-sig' or 'ISO-8859-1'.") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
-                        
-                        try:
-                            content_str = content_full.decode('utf-8-sig')
-                            size = len(content_full)
-                            cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size))
-                        except UnicodeDecodeError:
-                            content_str = content_full.decode('ISO-8859-1')
-                            size = len(content_full)
-                            cursor.execute("INSERT INTO file_contents (filelocation, content, size) VALUES (?, ?, ?)", (filelocation, content_str, size))
-                        #print(f"File: {filelocation}, Encoding: 'utf-8-sig' or 'ISO-8859-1' used as fallback.\nContent:\n{content_str}\n") #Optional kommentera bort den här raden om du inte vill se innehållet spammas i terimnalen
-                        
+# Kör funktionen för att bearbeta zip-arkivet
+extract_image_info(filePath)
 
-
-
-decode_and_insert_file_contents(filePath)
-
-
-
-# Åtaga ändringar och stäng databasanslutningen
+# Spara ändringarna och stäng databasanslutningen
 conn.commit()
 conn.close()
 
-print("Result of the OS ZIP file autopsy is now availible :)")
+# print(f"Resultat av OS ZIP-filens obduktion är nu tillgänglig :)")
+# print(f"Antal värdelösa dubbletter: {duplicates_count}")
+# print(f"Antal filer utan smak dvs EXIF: {no_exif_count}")
+# print(f"Antal Juicy filer: {juicy_count}")
