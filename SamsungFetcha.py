@@ -6,21 +6,21 @@ from tqdm import tqdm
 import piexif
 import hashlib
 
-# Definiera sökvägar för zip-filen och databasmappen
+# Definierar sökvägar för zip-filen och databasmappen
 dbName = "Galaxy_Autopsy_Report.db"
 filePath = r"K:/TheProjectAIF/ITF/S21.zip"
 dbFolder = r"K:/TheProjectAIF/ITF/dbFolder"
 dbPath = os.path.join(dbFolder, dbName)
 
-# Kontrollera om databasmappen finns; skapa annars
+# Kontrollerar om databasmappen finns; skapa annars
 if not os.path.exists(dbFolder):
     os.makedirs(dbFolder)
 
-# Anslut till eller skapa databasen
+# Ansluter till eller skapar databasen
 conn = sqlite3.connect(dbPath)
 cursor = conn.cursor()
 
-# Skapa en tabell i databasen för att lagra bildinformation
+# Skapar en tabell i databasen för att lagra bildinformation
 cursor.execute('''CREATE TABLE IF NOT EXISTS image_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     filelocation TEXT,
