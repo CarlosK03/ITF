@@ -1,8 +1,8 @@
 import zipfile
 
-#extractionPath = "Users/TheKi/ITF"
+#extractionPath = "x"
 
-extractionPath = "OneDrive_4_2-19-2024.zip"
+extractionPath = "x"
 
 openedZipfile = zipfile.ZipFile(extractionPath, mode="r")
 
