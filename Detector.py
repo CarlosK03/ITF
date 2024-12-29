@@ -1,5 +1,5 @@
-'''Skapade denna Py-fil i syfte till att lista ut vilka kodningar som används i filerna i S21.zip'''
-'''Denna används ej längre då jag implementerad logiken i SamsungFetcha.py'''
+'''Created this Python file with the purpose of figuring out the encodings used in the files within S21.zip.  
+This is no longer used as I have implemented the logic in SamsungFetcha.py.'''
 
 # import zipfile
 # import chardet
