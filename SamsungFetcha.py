@@ -1,26 +1,23 @@
-'''
-Innuti dbFolder skapas db filen om den redan existerar där så måste vi radera den för att skapa en ny i koden.
-'''
 import zipfile, sqlite3, os
 from tqdm import tqdm
 import piexif
 import hashlib
 
-# Definierar sökvägar för zip-filen och databasmappen
-dbName = "Galaxy_Autopsy_Report.db"
-filePath = r"K:/TheProjectAIF/ITF/S21.zip"
-dbFolder = r"K:/TheProjectAIF/ITF/dbFolder"
+# Defines paths for the zip file and the database folder
+dbName = "X.db"
+filePath = r"INSERT PHONE OS ZIP FILE PATH"
+dbFolder = r"INSERT LOCATION FOR THE CREATED DB FILE AFTER CODE EXECUTION"
 dbPath = os.path.join(dbFolder, dbName)
 
-# Kontrollerar om databasmappen finns; skapa annars
+# Checks if the database folder exists; otherwise, creates it
 if not os.path.exists(dbFolder):
     os.makedirs(dbFolder)
 
-# Ansluter till eller skapar databasen
+# Connects to or creates the database
 conn = sqlite3.connect(dbPath)
 cursor = conn.cursor()
 
-# Skapar en tabell i databasen för att lagra bildinformation
+# Creates a table in the database to store image information
 cursor.execute('''CREATE TABLE IF NOT EXISTS image_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     filelocation TEXT,
@@ -28,64 +25,64 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS image_data (
                     exif_data TEXT
                   )''')
 
-# Funktion för att extrahera och lagra information om bilder från en zip-fil
+# Function to extract and store information about images from a zip file
 def extract_image_info(zip_path):
-    # Öppna zip-filen
+    # Opens the zip file
     with zipfile.ZipFile(zip_path, 'r') as z:
-        # Iterera över varje fil i zip-arkivet
-        for filelocation in tqdm(z.namelist(), desc="Bearbetar bilder"):
-            # Kontrollerar filformat
+        # Iterates over each file in the zip archive
+        for filelocation in tqdm(z.namelist(), desc="Processing images"):
+            # Checks the file format
             if filelocation.lower().endswith(('.jpg', '.jpeg', '.tiff')):
-                # Extraherar filen till en temporär mapp
+                # Extracts the file to a temporary folder
                 filepath = z.extract(filelocation, path="temp_images")
-                # Hämtar EXIF-data och hash för bilden
+                # Retrieves EXIF data and hash for the image
                 exif_data_str = get_readable_exif_data(filepath)
                 file_hash = get_file_hash(filepath)
-                # Kontrollerar om hashen redan finns i databasen
+                # Checks if the hash already exists in the database
                 cursor.execute("SELECT id FROM image_data WHERE hash = ?", (file_hash,))
                 if cursor.fetchone():
-                    # Hash finns redan, ignorerar filen
+                    # Hash already exists, ignores the file
                     os.remove(filepath)
                     continue
-                # Hash finns inte, infogar ny data
-                os.remove(filepath)  # Radera den extraherade filen
+                # Hash does not exist, inserts new data
+                os.remove(filepath)  # Deletes the extracted file
                 exif_data_str = str(exif_data_str) if exif_data_str else "NO EXIF"
                 cursor.execute("INSERT INTO image_data (filelocation, hash, exif_data) VALUES (?, ?, ?)",
                                (filelocation, file_hash, exif_data_str))
 
-# Funktion för att hämta EXIF-data från en bildfil
+# Function to retrieve EXIF data from an image file
 def get_readable_exif_data(filepath):
     try:
         exif_dict = piexif.load(filepath)
         readable_exif = {}
 
-        # Konverterar EXIF-data till en mer läsbar form
+        # Converts EXIF data to a more readable format
         for ifd in exif_dict:
             if ifd == "thumbnail":
-                continue  # Ignorera miniatyrbilden
+                continue  # Ignores the thumbnail
             for tag in exif_dict[ifd]:
                 tag_name = piexif.TAGS[ifd][tag]["name"]
                 tag_value = exif_dict[ifd][tag]
                 
-                # Konvertera binära data till läsbar sträng om möjligt
+                # Converts binary data to a readable string if possible
                 if isinstance(tag_value, bytes):
                     try:
                         tag_value = tag_value.decode('utf-8', 'ignore')
                     except UnicodeDecodeError:
-                        tag_value = "<binär data>"
+                        tag_value = "<binary data>"
                 
                 readable_exif[tag_name] = tag_value
 
-        # Returnera den läsbara EXIF-informationen som en sträng
+        # Returns the readable EXIF information as a string
         exif_str = "; ".join([f"{key}: {value}" for key, value in readable_exif.items()])
-        return exif_str if exif_str else "Ingen EXIF-data funnen"
+        return exif_str if exif_str else "No EXIF data found"
     except Exception as e:
-        return "Fel vid läsning av EXIF-data"
+        return "Error reading EXIF data"
 
 '''
-Funktionen beräknar SHA-256-hash för en fil. Den läser filen i små delar (block om 4096 byte) för effektivitet och uppdaterar hashet för varje del.
-lambda: f.read(4096) är ett enkelt sätt att upprepa läsningen tills filen är helt läst.
-Detta gör beräkningen snabb och minneseffektiv. Efter att hela filen lästs, returneras hashet som en hexadecimal sträng.
+The function calculates a SHA-256 hash for a file. It reads the file in small chunks (blocks of 4096 bytes) for efficiency and updates the hash for each chunk.
+lambda: f.read(4096) is a simple way to repeatedly read until the file is fully read.
+This makes the computation fast and memory-efficient. After the entire file is read, the hash is returned as a hexadecimal string.
 '''
 def get_file_hash(filepath):
     sha256_hash = hashlib.sha256()
@@ -94,7 +91,6 @@ def get_file_hash(filepath):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-
 def generate_html_report(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -102,14 +98,14 @@ def generate_html_report(db_path):
     cursor.execute("SELECT filelocation, hash, exif_data FROM image_data")
     images = cursor.fetchall()
     
-    # HTML fil skapas och skrivs
+    # HTML file is created and written
     html = """
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Bildinformationsrapport</title>
+        <title>Image Information Report</title>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 40px; }}
         h1 {{ color: #333; }}
@@ -121,10 +117,10 @@ def generate_html_report(db_path):
 
     </head>
     <body>
-        <h1>Bildinformationsrapport</h1>
+        <h1>Image Information Report</h1>
         <table border="1">
             <tr>
-                <th>Filplats</th>
+                <th>File Location</th>
                 <th>Hash</th>
                 <th>EXIF Data</th>
             </tr>
@@ -133,26 +129,26 @@ def generate_html_report(db_path):
     </body>
     </html>
     """
-    # Skapar tabellrader för varje bild
+    # Creates table rows for each image
     rows = ""
     for filelocation, hash, exif_data in images:
         rows += "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(filelocation, hash, exif_data)
     
-    # Slutför HTML-innehållet
+    # Completes the HTML content
     html = html.format(rows)
     
-    # Skriver HTML-innehåll till en fil
+    # Writes the HTML content to a file
     with open("image_data_report.html", "w", encoding="utf-8") as file:
         file.write(html)
     
-    print("HTML-Autopsin har genererats :D")
+    print("HTML report has been generated :D")
 
-# Bearbeta zip-arkivet för att extrahera bildinformation
+# Processes the zip archive to extract image information
 extract_image_info(filePath)
 
-# Spara ändringar och stäng databasanslutningen
+# Saves changes and closes the database connection
 conn.commit()
 conn.close()
 
-# Generera HTML-rapporten från databasen sist p.ga att vi vill ha all data när db filen inte är låst
+# Generates the HTML report from the database last because we want all data when the DB file is not locked
 generate_html_report(dbPath)
